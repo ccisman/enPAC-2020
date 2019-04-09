@@ -1,0 +1,16 @@
+ResAllocation-PT-R003C005-LTLCardinality-00:{token-count(p_2_1,)<=token-count(p_1_2,)}
+ResAllocation-PT-R003C005-LTLCardinality-01:X([]([](<>({token-count(p_4_1,)<=token-count(p_2_1,)}))))
+ResAllocation-PT-R003C005-LTLCardinality-02:<>([]({2<=token-count(r_0_0,)}))
+ResAllocation-PT-R003C005-LTLCardinality-03:<>(X({1<=token-count(r_0_1,)}))
+ResAllocation-PT-R003C005-LTLCardinality-04:X(({token-count(p_0_0,)<=token-count(p_0_2,)})U(X({token-count(p_1_2,)<=token-count(r_3_2,)})))
+ResAllocation-PT-R003C005-LTLCardinality-05:{token-count(p_0_2,)<=token-count(p_1_2,)}
+ResAllocation-PT-R003C005-LTLCardinality-06:[]((<>({token-count(r_1_1,)<=token-count(p_2_0,)}))U([]({2<=token-count(p_0_1,)})))
+ResAllocation-PT-R003C005-LTLCardinality-07:{token-count(p_2_1,)<=token-count(p_1_2,)}
+ResAllocation-PT-R003C005-LTLCardinality-08:<>({1<=token-count(r_0_0,)})
+ResAllocation-PT-R003C005-LTLCardinality-09:[]([](<>(X({3<=token-count(p_0_1,)}))))
+ResAllocation-PT-R003C005-LTLCardinality-10:(({2<=token-count(p_1_0,)})U({token-count(r_0_0,)<=token-count(p_1_2,)}))U({1<=token-count(r_4_1,)})
+ResAllocation-PT-R003C005-LTLCardinality-11:X(X({token-count(p_4_1,)<=token-count(r_1_0,)}))
+ResAllocation-PT-R003C005-LTLCardinality-12:{2<=token-count(p_2_1,)}
+ResAllocation-PT-R003C005-LTLCardinality-13:{token-count(p_2_2,)<=token-count(p_0_1,)}
+ResAllocation-PT-R003C005-LTLCardinality-14:<>([](X([]({token-count(r_0_0,)<=token-count(r_2_1,)}))))
+ResAllocation-PT-R003C005-LTLCardinality-15:[](X([](<>({token-count(r_0_0,)<=token-count(p_1_0,)}))))

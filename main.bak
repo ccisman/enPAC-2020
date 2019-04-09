@@ -1,0 +1,275 @@
+#include"product.h"
+#include"xml2ltl.h"
+#include<fstream>
+#include<time.h>
+#include<unistd.h>
+#include<signal.h>
+#include<pthread.h>
+
+using namespace std;
+
+void handler(int num)
+{
+	printf("rg time out .\n");
+	exit(0);
+}
+
+int main()
+{
+	cout << "=================================================" << endl;
+	cout << "=====This is our tool-enPAC for the MCC'2019=====" << endl;
+	cout << "=================================================" << endl;
+
+	//check if it is a color petri net
+	string strcol;
+	ifstream readcol("iscolored", ios::in);
+	if (!readcol) { cout << "error!"; getchar(); exit(-1); }
+	getline(readcol, strcol);
+	if (strcol == "TRUE")
+	{
+		cout << "DO_NOT_COMPETE" << endl;
+		return 0;
+	}
+
+	//计时
+	signal(SIGALRM, handler);
+    	alarm(3600);
+
+    //parse xml files
+	char Ffile[50] = "LTLFireability.xml";
+	char Cfile[50] = "LTLCardinality.xml";
+	convertf(Ffile);
+	convertc(Cfile);
+
+	//StateSpace
+	ofstream outfile("reachablility.txt", ios::out);
+	ofstream outprint("ptnet.txt", ios::out);
+	char petrifile[20] = "model.pnml";
+	Petri ptnet;
+	//RG graph;
+
+	ptnet.readPNML(petrifile);   //generate petri net
+	ptnet.getA();
+	ptnet.UpperTriangularMatrix();
+	ptnet.printA();
+
+
+	/*graph.ReachabilityTree(ptnet);
+	graph.standardOutput(ptnet);
+	graph.PrintGraph(ptnet, outfile);*/
+
+
+	//LTLFireability check£º
+	string S, propertyid; //propertyid stores names of LTL formulae
+	char form[20000];     //store LTL formulae
+
+	ofstream outresult("boolresult.txt", ios::out);  //outresult export results to boolresult.txt
+	int timeleft=alarm(0)/32;
+
+	//check LTLFireability
+	ifstream read("LTLFireability.txt", ios::in);
+	if (!read) { cout << "error!"; getchar(); exit(-1); }
+
+	while (getline(read, propertyid, ':'))
+	{
+		RG graph(ptnet);
+		cout << propertyid << ':';
+		getline(read, S);
+		strcpy(form, S.c_str());
+		//cout << form << endl;
+		cout << endl;
+		//lexer
+		Lexer lex(form, S.length());
+		//syntax analysis
+		Syntax_Tree ST;
+		formula_stack Ustack;
+		ST.reverse_polish(lex);
+		ST.build_tree();
+		/*cout << "The syntax tree of unsimplified formula£º" << endl;
+		ST.print_syntax_tree(ST.root, 0);*/
+		//LTL formula rewrite
+		ST.simplify_LTL(ST.root->left);
+		/*cout << endl;
+		cout << "The syntax tree of simplified formula£º" << endl;
+		ST.print_syntax_tree(ST.root, 0);*/
+		//syntax tree convert 
+		ST.negconvert(ST.root->left, Ustack);
+		/*cout << endl;
+		cout << "The converted formula£º" << endl;
+		cout << ST.root->left->formula << endl;
+		cout << endl;*/
+		//Êä³öU×ÓÊ½
+		/*cout << "The subformulas of LTL whose main operator is \'U\'£º" << endl;
+		vector<STNode>::iterator Uiter;
+		for (Uiter = Ustack.loc.begin(); Uiter != Ustack.loc.end(); Uiter++)
+		{
+			cout << (*Uiter)->formula << endl;
+		}
+		cout << endl;*/
+		//¹¹ÔìTGBA
+		TGBA Tgba;
+		Tgba.CreatTGBA(Ustack, ST.root->left);
+		Tgba.SimplifyStates();
+		//cout << endl;
+		//¹¹ÔìTBA
+		TBA tba;
+		tba.CreatTBA(Tgba, Ustack);
+		string filename = propertyid + ".txt";
+		//tba.PrintBuchi(filename);
+		/*cout << "Please check the file" + filename + ". In this file you can see the Buchi automata related to the LTL formula!";
+		cout << endl;*/
+		//¹¹ÔìSBA
+		SBA sba;
+		sba.CreatSBA(tba);
+		sba.Simplify();
+		sba.Compress();
+		//cout << "begin:ON-THE-FLY" << endl;
+		Product_Automata *product = new Product_Automata;
+		product->ModelChecker(ptnet, graph, sba, propertyid, timeleft, outresult);
+		delete product;
+	}
+	
+	cout << endl << endl;
+	ifstream readF("LTLCardinality.txt", ios::in);
+	if (!readF) { cout << "error!"; getchar(); exit(-1); }
+
+	//cout<<"timeleft:"<<timeleft*16<<endl;
+	outresult << endl;
+	while (getline(readF, propertyid, ':'))
+	{
+		RG graph(ptnet);
+		cout << propertyid << ':';
+		getline(readF, S);
+		strcpy(form, S.c_str());
+		//cout << form << endl;
+		cout << endl;
+		//lexer
+		Lexer lex(form, S.length());
+		//syntax analysis
+		Syntax_Tree ST;
+		formula_stack Ustack;
+		ST.reverse_polish(lex);
+		ST.build_tree();
+		/*cout << "The syntax tree of unsimplified formula£º" << endl;
+		ST.print_syntax_tree(ST.root, 0);*/
+		//LTL formula rewrite
+		ST.simplify_LTL(ST.root->left);
+		/*cout << endl;
+		cout << "The syntax tree of simplified formula£º" << endl;
+		ST.print_syntax_tree(ST.root, 0);*/
+		//syntax tree convert 
+		ST.negconvert(ST.root->left, Ustack);
+		/*cout << endl;
+		cout << "The converted formula£º" << endl;
+		cout << ST.root->left->formula << endl;
+		cout << endl;*/
+		//Êä³öU×ÓÊ½
+		/*cout << "The subformulas of LTL whose main operator is \'U\'£º" << endl;
+		vector<STNode>::iterator Uiter;
+		for (Uiter = Ustack.loc.begin(); Uiter != Ustack.loc.end(); Uiter++)
+		{
+			cout << (*Uiter)->formula << endl;
+		}
+		cout << endl;*/
+		//¹¹ÔìTGBA
+		TGBA Tgba;
+		Tgba.CreatTGBA(Ustack, ST.root->left);
+		Tgba.SimplifyStates();
+		//cout << endl;
+		//¹¹ÔìTBA
+		TBA tba;
+		tba.CreatTBA(Tgba, Ustack);
+		string filename = propertyid + ".txt";
+		//tba.PrintBuchi(filename);
+		/*cout << "Please check the file" + filename + ". In this file you can see the Buchi automata related to the LTL formula!";
+		cout << endl;*/
+		//¹¹ÔìSBA
+		SBA sba;
+		sba.CreatSBA(tba);
+		sba.Simplify();
+		sba.Compress();
+		//cout << "begin:ON-THE-FLY" << endl;
+		Product_Automata *product = new Product_Automata;
+		product->ModelChecker(ptnet, graph, sba, propertyid, timeleft,outresult);
+		delete product;
+	}
+
+
+	return 0;
+}
+int main0()
+{
+	int timeleft=0;
+	ifstream read("a.txt", ios::in);
+	//ofstream outfile("reachablility.txt", ios::out);
+	if (!read) { cout << "error!"; getchar(); exit(-1); }
+	char form[100], p;
+	int i = 0;
+	string filename = "SBA.txt";
+	char petrifile[20] = "model.pnml";
+
+	Petri ptnet;
+	RG graph(ptnet);
+	Product_Automata product;
+
+	ptnet.readPNML(petrifile);
+	ptnet.getA();
+	ptnet.UpperTriangularMatrix();
+	/*graph.ReachabilityTree(ptnet);
+	graph.standardOutput(ptnet);*/
+	//graph.PrintGraph(ptnet, outfile);
+	ofstream outresult("boolresult.txt", ios::out);
+	while (true)
+	{
+		read.get(p);
+		if (p == ' ' || p == '\t' || p == '\n')
+			continue;
+		if (p == '#')
+			break;
+		form[i++] = p;
+		cout << form[i - 1];
+	}
+	cout << endl;
+
+	Lexer lex(form, i);
+	Syntax_Tree ST;
+	formula_stack Ustack;
+
+	ST.reverse_polish(lex);
+	ST.build_tree();
+	cout << "The syntax tree of unsimplified formula£º" << endl;
+	ST.print_syntax_tree(ST.root, 0);
+	ST.simplify_LTL(ST.root->left);
+	cout << endl;
+	cout << "The syntax tree of simplified formula£º" << endl;
+	ST.print_syntax_tree(ST.root, 0);
+	ST.negconvert(ST.root->left, Ustack);
+	cout << endl;
+	cout << "The converted formula£º" << endl;
+	cout << ST.root->left->formula << endl;
+	cout << endl;
+	cout << "The subformulas of LTL whose main operator is \'U\'£º" << endl;
+	vector<STNode>::iterator Uiter;
+	for (Uiter = Ustack.loc.begin(); Uiter != Ustack.loc.end(); Uiter++)
+	{
+		cout << (*Uiter)->formula << endl;
+	}
+	cout << endl;
+	TGBA Tgba;
+	Tgba.CreatTGBA(Ustack, ST.root->left);
+	Tgba.SimplifyStates();
+	cout << endl;
+	TBA tba;
+	tba.CreatTBA(Tgba, Ustack);
+
+	tba.PrintBuchi(filename);
+	cout << "Please the check file \"TBA.txt\". In this file you can the Buchi automata related to the LTL formula!";
+	cout << endl;
+	SBA sba;
+	sba.CreatSBA(tba);
+	sba.Simplify();
+	sba.Compress();
+
+	cout << "begin:product" << endl;
+	product.ModelChecker(ptnet, graph, sba, "0", timeleft, outresult);
+}
