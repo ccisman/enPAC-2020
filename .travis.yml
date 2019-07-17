@@ -29,6 +29,8 @@ script :
   - tar cvzf enPAC.tgz enPAC_on_the_fly 
   - cp  enPAC.tgz website/
   - ls -lah website/
+  - cd example
+  - ../enPAC_on_the_fly
 
 deploy:
   provider: pages
